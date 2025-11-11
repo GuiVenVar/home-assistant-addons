@@ -1,5 +1,37 @@
 {
-    "name": "MindFreeze's home-assistant Addons",
-    "url": "https://github.com/MindFreeze/home-assistant-addons",
-    "maintainer": "MindFreeze"
+  "name": "GuiVenVar's Custom Addons",
+  "url": "https://github.com/GuiVenVar/home-assistant-addons",
+  "maintainer": "GuiVenVar",
+  "addons": [
+    {
+      "name": "Axpert Command",
+      "slug": "axpert_cmd",
+      "description": "Control expert inverter (legacy)",
+      "url": "https://github.com/GuiVenVar/home-assistant-addons/tree/main/axpert_cmd"
+    },
+    {
+      "name": "Daly BMS",
+      "slug": "dalybms",
+      "description": "Daly BMS Addon",
+      "url": "https://github.com/GuiVenVar/home-assistant-addons/tree/main/dalybms"
+    },
+    {
+      "name": "HA VNC Web Browser",
+      "slug": "ha_vnc_web_browser",
+      "description": "VNC Web Browser for Home Assistant",
+      "url": "https://github.com/GuiVenVar/home-assistant-addons/tree/main/ha-vnc-web-browser"
+    },
+    {
+      "name": "Hass.io Axpert",
+      "slug": "hassio_axpert",
+      "description": "Addon para inversores Axpert con ttyUSB0",
+      "url": "https://github.com/GuiVenVar/home-assistant-addons/tree/main/hassio-axpert"
+    },
+    {
+      "name": "Landroid Bridge",
+      "slug": "landroid_bridge",
+      "description": "Landroid Bridge for MQTT",
+      "url": "https://github.com/GuiVenVar/home-assistant-addons/tree/main/landroid-bridge"
+    }
+  ]
 }
