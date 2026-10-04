@@ -1,0 +1,1289 @@
+# =============================================================
+# CONFIGURACIÓN PRINCIPAL DE HOME ASSISTANT
+# =============================================================
+default_config:
+
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# =============================================================
+# HELPERS (INPUT NUMBER & DATETIME): DIARIOS E HISTÓRICOS
+# =============================================================
+input_number:
+  # --- Control Económico Gasolina ---
+  precio_gasolina_litro:
+    name: "Precio Gasolina (€/L)"
+    min: 1.00
+    max: 3.00
+    step: 0.01
+    initial: 1.52
+    mode: box
+
+  # --- Picos Diarios ---
+  pv1_record_w:
+    name: "PV1 Record W"
+    min: 0
+    max: 6000
+    step: 1
+    mode: box
+  pv2_record_w:
+    name: "PV2 Record W"
+    min: 0
+    max: 10000
+    step: 1
+    mode: box
+  total_record_w:
+    name: "Total Record W"
+    min: 0
+    max: 15000
+    step: 1
+    mode: box
+  consumo_record_w:
+    name: "Consumo Record W"
+    min: 0
+    max: 15000
+    step: 1
+    mode: box
+
+  # --- Récords Históricos Absolutos ---
+  pv1_record_historico_w:
+    name: "PV1 Record Historico W"
+    min: 0
+    max: 6000
+    step: 1
+    mode: box
+  pv2_record_historico_w:
+    name: "PV2 Record Historico W"
+    min: 0
+    max: 10000
+    step: 1
+    mode: box
+  total_record_historico_w:
+    name: "Total Record Historico W"
+    min: 0
+    max: 15000
+    step: 1
+    mode: box
+  consumo_record_historico_w:
+    name: "Consumo Record Historico W"
+    min: 0
+    max: 15000
+    step: 1
+    mode: box
+
+  # --- Contador Vitalicio de Previsiones (Para Utility Meter) ---
+  solar_prevision_contador_vitalicio_kwh:
+    name: "Solar Previsión Contador Vitalicio kWh"
+    min: 0
+    max: 500000
+    step: 0.01
+    mode: box
+
+input_datetime:
+  # --- Rachas Diarias (Solo Hora) ---
+  pv1_racha_inicio:
+    name: "PV1 Racha Inicio"
+    has_date: false
+    has_time: true
+  pv1_racha_fin:
+    name: "PV1 Racha Fin"
+    has_date: false
+    has_time: true
+
+  pv2_racha_inicio:
+    name: "PV2 Racha Inicio"
+    has_date: false
+    has_time: true
+  pv2_racha_fin:
+    name: "PV2 Racha Fin"
+    has_date: false
+    has_time: true
+
+  total_racha_inicio:
+    name: "Total Racha Inicio"
+    has_date: false
+    has_time: true
+  total_racha_fin:
+    name: "Total Racha Fin"
+    has_date: false
+    has_time: true
+
+  consumo_racha_inicio:
+    name: "Consumo Racha Inicio"
+    has_date: false
+    has_time: true
+  consumo_racha_fin:
+    name: "Consumo Racha Fin"
+    has_date: false
+    has_time: true
+
+  # --- Timestamps Récord Histórico (Fecha + Hora) ---
+  pv1_record_historico_ts:
+    name: "PV1 Record Historico TS"
+    has_date: true
+    has_time: true
+  pv2_record_historico_ts:
+    name: "PV2 Record Historico TS"
+    has_date: true
+    has_time: true
+  total_record_historico_ts:
+    name: "Total Record Historico TS"
+    has_date: true
+    has_time: true
+  consumo_record_historico_ts:
+    name: "Consumo Record Historico TS"
+    has_date: true
+    has_time: true
+
+# =============================================================
+# 1. RECEPCIÓN DE TELEMETRÍA MQTT (MASTERPOWER / AXPERT)
+# =============================================================
+mqtt:
+  sensor:
+    # --- MPPT 1 (String 1 / PV1 Sur) ---
+    - name: "Solar MPPT1 Voltaje"
+      unique_id: "solar_mppt1_voltaje"
+      state_topic: "power/axpert96342210104295"
+      value_template: "{{ value_json.PvInputVoltage | float(0) }}"
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+      icon: "mdi:solar-panel"
+
+    - name: "Solar MPPT1 Corriente"
+      unique_id: "solar_mppt1_corriente"
+      state_topic: "power/axpert96342210104295"
+      value_template: "{{ value_json.PvInputCurrent | float(0) }}"
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      icon: "mdi:current-dc"
+
+    - name: "Solar MPPT1 Potencia"
+      unique_id: "solar_mppt1_potencia"
+      state_topic: "power/axpert96342210104295"
+      value_template: "{{ value_json.PvInputPower | float(0) }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      icon: "mdi:solar-power"
+
+    # --- MPPT 2 (String 2 / PV2 Techo) ---
+    - name: "Solar MPPT2 Voltaje"
+      unique_id: "solar_mppt2_voltaje"
+      state_topic: "power/axpert96342210104295_pv2"
+      value_template: "{{ value_json.Pv2InputVoltage | float(0) }}"
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+      icon: "mdi:solar-panel"
+
+    - name: "Solar MPPT2 Corriente"
+      unique_id: "solar_mppt2_corriente"
+      state_topic: "power/axpert96342210104295_pv2"
+      value_template: "{{ value_json.Pv2InputCurrent | float(0) }}"
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      icon: "mdi:current-dc"
+
+    - name: "Solar MPPT2 Potencia"
+      unique_id: "solar_mppt2_potencia"
+      state_topic: "power/axpert96342210104295_pv2"
+      value_template: "{{ value_json.Pv2InputPower | float(0) }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      icon: "mdi:solar-power"
+
+    # --- BANCO DE BATERÍAS (4x Upower UE-48Li5120I = 20.48 kWh) ---
+    - name: "Batería Capacidad SOC"
+      unique_id: "bateria_capacidad_soc"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.BatteryCapacity | int(0) }}"
+      unit_of_measurement: "%"
+      device_class: battery
+      state_class: measurement
+
+    - name: "Batería Voltaje"
+      unique_id: "bateria_voltaje"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.BatteryVoltage | float(0) }}"
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+
+    - name: "Batería Voltaje SCC"
+      unique_id: "bateria_voltaje_scc"
+      state_topic: "power/axpert96342210104295"
+      value_template: "{{ value_json.BatteryVoltageFromScc | float(0) }}"
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+
+    - name: "Batería Corriente Carga"
+      unique_id: "bateria_corriente_carga"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.BatteryChargingCurrent | float(0) }}"
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      icon: "mdi:battery-arrow-up"
+
+    - name: "Batería Corriente Descarga"
+      unique_id: "bateria_corriente_descarga"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.BatteryDischargeCurrent | float(0) }}"
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      icon: "mdi:battery-arrow-down"
+
+    # --- INVERSOR Y RED AC (GRID / GENERADOR) ---
+    - name: "Grid Voltaje"
+      unique_id: "grid_voltaje"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.GridVoltage | float(0) }}"
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+      icon: "mdi:transmission-tower"
+
+    - name: "Grid Frecuencia"
+      unique_id: "grid_frecuencia"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.GridFrequency | float(0) }}"
+      unit_of_measurement: "Hz"
+      device_class: frequency
+      state_class: measurement
+      icon: "mdi:sine-wave"
+
+    - name: "Inversor Potencia Activa Salida"
+      unique_id: "inversor_potencia_activa_salida"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.OutputActivePower | float(0) }}"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      icon: "mdi:flash"
+
+    - name: "Inversor Potencia Aparente Salida"
+      unique_id: "inversor_potencia_aparente_salida"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.OutputAparentPower | float(0) }}"
+      unit_of_measurement: "VA"
+      device_class: apparent_power
+      state_class: measurement
+
+    - name: "Inversor Porcentaje Carga"
+      unique_id: "inversor_porcentaje_carga"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.LoadPercentage | float(0) }}"
+      unit_of_measurement: "%"
+      state_class: measurement
+      icon: "mdi:gauge"
+
+    - name: "Inversor Voltaje Salida"
+      unique_id: "inversor_voltaje_salida"
+      state_topic: "power/axpert"
+      value_template: "{{ value_json.OutputVoltage | float(0) }}"
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+
+    - name: "Inversor Temperatura Disipador"
+      unique_id: "inversor_temperatura_disipador"
+      state_topic: "power/axpert96342210104295"
+      value_template: "{{ value_json.InverterHeatsinkTemperature | float(0) }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+
+    - name: "Inversor Bus Voltaje"
+      unique_id: "inversor_bus_voltaje"
+      state_topic: "power/axpert96342210104295"
+      value_template: "{{ value_json.BusVoltage | float(0) }}"
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+
+# =============================================================
+# 2. FILTROS, INTEGRACIONES Y ESTADÍSTICAS
+# =============================================================
+sensor:
+  - platform: filter
+    name: "Consumo Vivienda Media 5m"
+    entity_id: sensor.consumo_vivienda_w
+    filters:
+      - filter: time_simple_moving_average
+        window_size: "00:05:00"
+        precision: 1
+
+  # Integraciones Riemann (W -> kWh)
+  - platform: integration
+    source: sensor.solar_potencia_total_fv
+    name: "Solar Energía FV Acumulada Total"
+    unique_id: "solar_energia_fv_acumulada_total_kwh"
+    unit_prefix: k
+    round: 3
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.solar_mppt1_potencia
+    name: "Solar MPPT1 Energía Acumulada"
+    unique_id: "solar_mppt1_energia_acumulada_kwh"
+    unit_prefix: k
+    round: 3
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.solar_mppt2_potencia
+    name: "Solar MPPT2 Energía Acumulada"
+    unique_id: "solar_mppt2_energia_acumulada_kwh"
+    unit_prefix: k
+    round: 3
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.grid_potencia_activa_w
+    name: "Grid Energía Acumulada Total"
+    unique_id: "grid_energia_acumulada_total_kwh"
+    unit_prefix: k
+    round: 3
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.inversor_potencia_activa_salida
+    name: "Consumo Energía Acumulada Total"
+    unique_id: "consumo_energia_acumulada_total_kwh"
+    unit_prefix: k
+    round: 3
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.bateria_potencia_carga
+    name: "Batería Energía Carga Acumulada"
+    unique_id: "bateria_energia_carga_acumulada_kwh"
+    unit_prefix: k
+    round: 3
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.bateria_potencia_descarga
+    name: "Batería Energía Descarga Acumulada"
+    unique_id: "bateria_energia_descarga_acumulada_kwh"
+    unit_prefix: k
+    round: 3
+    method: trapezoidal
+
+  # History Stats
+  - platform: history_stats
+    name: "Solar PV1 Tiempo Acumulado Record Hoy"
+    unique_id: solar_pv1_tiempo_acumulado_record_hoy
+    entity_id: binary_sensor.solar_pv1_en_zona_record
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "Solar PV2 Tiempo Acumulado Record Hoy"
+    unique_id: solar_pv2_tiempo_acumulado_record_hoy
+    entity_id: binary_sensor.solar_pv2_en_zona_record
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "Solar Total Tiempo Acumulado Record Hoy"
+    unique_id: solar_total_tiempo_acumulado_record_hoy
+    entity_id: binary_sensor.solar_total_en_zona_record
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "Consumo Vivienda Tiempo Acumulado Record Hoy"
+    unique_id: consumo_vivienda_tiempo_acumulado_record_hoy
+    entity_id: binary_sensor.consumo_vivienda_en_zona_record
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+# =============================================================
+# 3. TEMPLATES MODERNOS UNIFICADOS
+# =============================================================
+template:
+  - binary_sensor:
+      - name: "PV1 Sur en Zona Record"
+        unique_id: solar_pv1_en_zona_record
+        state: >
+          {% set p = states('sensor.solar_mppt1_potencia') | float(0) %}
+          {% set rec = states('input_number.pv1_record_w') | float(0) %}
+          {{ rec > 100 and p >= (rec - 100) }}
+
+      - name: "PV2 Techo en Zona Record"
+        unique_id: solar_pv2_en_zona_record
+        state: >
+          {% set p = states('sensor.solar_mppt2_potencia') | float(0) %}
+          {% set rec = states('input_number.pv2_record_w') | float(0) %}
+          {{ rec > 100 and p >= (rec - 100) }}
+
+      - name: "Campo Solar Total en Zona Record"
+        unique_id: solar_total_en_zona_record
+        state: >
+          {% set p = states('sensor.solar_potencia_total_fv') | float(0) %}
+          {% set rec = states('input_number.total_record_w') | float(0) %}
+          {{ rec > 100 and p >= (rec - 100) }}
+
+      - name: "Consumo Vivienda en Zona Record"
+        unique_id: consumo_vivienda_en_zona_record
+        state: >
+          {% set p = states('sensor.consumo_vivienda_w') | float(0) %}
+          {% set rec = states('input_number.consumo_record_w') | float(0) %}
+          {{ rec > 100 and p >= (rec - 100) }}
+
+  - sensor:
+      # --- GRID / GENERADOR POTENCIA Y ELÉCTRICOS ---
+      - name: "Grid Potencia Activa W"
+        unique_id: "grid_potencia_activa_w"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:transmission-tower"
+        state: >
+          {% set grid_v = states('sensor.grid_voltaje') | float(0) %}
+          {% if grid_v > 50 %}
+            {{ states('sensor.inversor_potencia_activa_salida') | float(0) }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Grid Potencia Activa kW"
+        unique_id: "grid_potencia_activa_kw"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:transmission-tower"
+        state: >
+          {{ (states('sensor.grid_potencia_activa_w') | float(0) / 1000) | round(3) }}
+
+      - name: "Grid Coste kWh Actual"
+        unique_id: "grid_coste_kwh_actual"
+        unit_of_measurement: "€/kWh"
+        state: >
+          {% set grid_v = states('sensor.grid_voltaje') | float(0) %}
+          {% if grid_v > 50 %}
+            {% set precio_l = states('input_number.precio_gasolina_litro') | float(1.52) %}
+            {{ (((3.5 / 4.5) * precio_l)) | round(3) }}
+          {% else %}
+            0.16
+          {% endif %}
+
+      # --- ENERGÍA DISPONIBLE (BASE 20.48 kWh) ---
+      - name: "Bateria Energia Disponible"
+        unique_id: bateria_energia_disponible_kwh
+        unit_of_measurement: "kWh"
+        device_class: energy_storage
+        state_class: measurement
+        icon: mdi:battery-charging-100
+        state: >
+          {% set soc = states('sensor.bateria_capacidad_soc') | float(0) %}
+          {{ ((soc / 100) * 20.48) | round(2) }}
+
+      # --- BATERÍA DISPLAY UNIFICADO (SOC + kWh) ---
+      - name: "Bateria Nivel y Energia Display"
+        unique_id: bateria_nivel_y_energia_display
+        icon: mdi:battery-charging
+        state: >
+          {% set soc = states('sensor.bateria_capacidad_soc') | int(0) %}
+          {% set kwh = states('sensor.bateria_energia_disponible') | float(0) %}
+          {{ soc }}% · {{ kwh }} kWh
+
+      # --- TIEMPO RESTANTE PARA CARGA COMPLETA (CON kWh RESTANTES) ---
+      - name: "Bateria Tiempo Carga Completa Display"
+        unique_id: bateria_tiempo_carga_completa_display
+        icon: mdi:battery-clock
+        state: >
+          {% set soc = states('sensor.bateria_capacidad_soc') | float(0) %}
+          {% set p_carga = states('sensor.bateria_potencia_carga') | float(0) %}
+          {% set kwh_faltantes = max(0, ((100 - soc) / 100) * 20.48) | round(2) %}
+
+          {% if soc >= 99.5 %}
+            0.00 kWh restantes · Completa
+          {% elif p_carga > 50 %}
+            {% set kw_carga = p_carga / 1000 %}
+            {% set horas = kwh_faltantes / kw_carga %}
+            {% set total_min = (horas * 60) | round(0) | int %}
+            {% set h = total_min // 60 %}
+            {% set m = total_min % 60 %}
+            {% if h > 0 %}
+              {{ kwh_faltantes }} kWh restantes · {{ h }}h {{ m }}m
+            {% else %}
+              {{ kwh_faltantes }} kWh restantes · {{ m }}m
+            {% endif %}
+          {% else %}
+            {{ kwh_faltantes }} kWh restantes · ∞
+          {% endif %}
+
+      # --- AUTONOMÍA NUMÉRICA ---
+      - name: "Bateria Autonomia Estimada"
+        unique_id: bateria_autonomia_estimada_horas
+        unit_of_measurement: "h"
+        icon: mdi:timer-sand
+        state: >
+          {% set soc = states('sensor.bateria_capacidad_soc') | float(0) %}
+          {% set p_descarga_raw = states('sensor.bateria_potencia_descarga') | float(0) %}
+          {% set p_carga_raw = states('sensor.bateria_potencia_carga') | float(0) %}
+          {% set energia_util_kwh = max(0, ((soc - 10) / 100) * 20.48) %}
+
+          {% if soc <= 10 %}
+            0.0
+          {% elif p_carga_raw > 50 or p_descarga_raw < 20 %}
+            99.0
+          {% else %}
+            {% set p_calc = states('sensor.consumo_vivienda_media_5m') | float(p_descarga_raw) %}
+            {% set p_kw = max(p_descarga_raw, p_calc) / 1000 %}
+            {{ (energia_util_kwh / p_kw) | round(1) }}
+          {% endif %}
+
+      # --- AUTONOMÍA DISPLAY ---
+      - name: "Bateria Autonomia Display"
+        unique_id: bateria_autonomia_display
+        icon: "mdi:timer-sand"
+        state: >
+          {% set horas = states('sensor.bateria_autonomia_estimada') | float(0) %}
+          {% if horas >= 99 %}
+            ∞
+          {% else %}
+            {{ horas }} h
+          {% endif %}
+
+      # -------------------------------------------------------
+      # GENERACIÓN SOLAR SUMADA (MPPT1 + MPPT2)
+      # -------------------------------------------------------
+      - name: "Solar Potencia Total FV"
+        unique_id: "solar_potencia_total_fv_w"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:solar-power-variant"
+        state: >
+          {% set p1 = states('sensor.solar_mppt1_potencia') | float(0) %}
+          {% set p2 = states('sensor.solar_mppt2_potencia') | float(0) %}
+          {{ (p1 + p2) | round(1) }}
+
+      - name: "Solar Potencia Total FV kW"
+        unique_id: "solar_potencia_total_fv_kw"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:solar-power"
+        state: >
+          {{ (states('sensor.solar_potencia_total_fv') | float(0) / 1000) | round(3) }}
+
+      - name: "Solar MPPT1 Potencia kW"
+        unique_id: "solar_mppt1_potencia_kw"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {{ (states('sensor.solar_mppt1_potencia') | float(0) / 1000) | round(3) }}
+
+      - name: "Solar MPPT2 Potencia kW"
+        unique_id: "solar_mppt2_potencia_kw"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {{ (states('sensor.solar_mppt2_potencia') | float(0) / 1000) | round(3) }}
+
+      - name: "Solar Total Corriente"
+        unique_id: "solar_total_corriente"
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        icon: "mdi:current-dc"
+        state: >
+          {% set c1 = states('sensor.solar_mppt1_corriente') | float(0) %}
+          {% set c2 = states('sensor.solar_mppt2_corriente') | float(0) %}
+          {{ (c1 + c2) | round(2) }}
+
+      - name: "Solar Total Voltaje Medio"
+        unique_id: "solar_total_voltaje_medio"
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        icon: "mdi:solar-panel"
+        state: >
+          {% set v1 = states('sensor.solar_mppt1_voltaje') | float(0) %}
+          {% set v2 = states('sensor.solar_mppt2_voltaje') | float(0) %}
+          {% if v1 > 0 and v2 > 0 %}
+            {{ ((v1 + v2) / 2) | round(0) }}
+          {% else %}
+            {{ max(v1, v2) | round(0) }}
+          {% endif %}
+
+      - name: "Solar Rendimiento Total Pct"
+        unique_id: "solar_rendimiento_total_pct"
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: "mdi:gauge"
+        state: >
+          {% set p_total = states('sensor.solar_potencia_total_fv') | float(0) %}
+          {{ min(100.0, ((p_total / 12120) * 100)) | round(1) }}
+
+      - name: "Solar Rendimiento PV1 Sur Pct"
+        unique_id: "solar_rendimiento_pv1_sur_pct"
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: "mdi:solar-panel"
+        state: >
+          {% set p_pv1 = states('sensor.solar_mppt1_potencia') | float(0) %}
+          {{ min(100.0, ((p_pv1 / 4545) * 100)) | round(1) }}
+
+      - name: "Solar Rendimiento PV2 Techo Pct"
+        unique_id: "solar_rendimiento_pv2_techo_pct"
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: "mdi:home-roof"
+        state: >
+          {% set p_pv2 = states('sensor.solar_mppt2_potencia') | float(0) %}
+          {{ min(100.0, ((p_pv2 / 7575) * 100)) | round(1) }}
+
+      # --- POTENCIA + % RENDIMIENTO INSTANTÁNEO ---
+      - name: "Solar PV1 Potencia Rendimiento Display"
+        unique_id: solar_pv1_potencia_rendimiento_display
+        icon: mdi:solar-power
+        state: >
+          {% set w = states('sensor.solar_mppt1_potencia') | float(0) | round(0) | int %}
+          {% set pct = states('sensor.solar_rendimiento_pv1_sur_pct') | float(0) | round(1) %}
+          {{ w }} W · {{ pct }}%
+
+      - name: "Solar PV2 Potencia Rendimiento Display"
+        unique_id: solar_pv2_potencia_rendimiento_display
+        icon: mdi:solar-power
+        state: >
+          {% set w = states('sensor.solar_mppt2_potencia') | float(0) | round(0) | int %}
+          {% set pct = states('sensor.solar_rendimiento_pv2_techo_pct') | float(0) | round(1) %}
+          {{ w }} W · {{ pct }}%
+
+      - name: "Solar Total Potencia Rendimiento Display"
+        unique_id: solar_total_potencia_rendimiento_display
+        icon: mdi:solar-power-variant
+        state: >
+          {% set w = states('sensor.solar_potencia_total_fv') | float(0) | round(0) | int %}
+          {% set pct = states('sensor.solar_rendimiento_total_pct') | float(0) | round(1) %}
+          {{ w }} W · {{ pct }}%
+
+      - name: "Consumo Vivienda Potencia Carga Display"
+        unique_id: consumo_vivienda_potencia_carga_display
+        icon: mdi:home-lightning-bolt
+        state: >
+          {% set w = states('sensor.consumo_vivienda_w') | float(0) | round(0) | int %}
+          {% set pct = states('sensor.inversor_porcentaje_carga') | float(0) | round(1) %}
+          {{ w }} W · {{ pct }}%
+
+      # --- PICO MÁXIMO DIRECTO (VINCULADO AL HELPER DIARIO) ---
+      - name: "Solar PV1 Pico Max Directo Display"
+        unique_id: solar_pv1_pico_max_directo_display
+        icon: mdi:trending-up
+        state: >
+          {% set p_max = states('input_number.pv1_record_w') | float(0) %}
+          {% set pct = min(100.0, ((p_max / 4545) * 100)) | round(1) %}
+          {% set kw = (p_max / 1000) | round(2) %}
+          {{ pct }}% ({{ kw }} kW)
+
+      - name: "Solar PV2 Pico Max Directo Display"
+        unique_id: solar_pv2_pico_max_directo_display
+        icon: mdi:trending-up
+        state: >
+          {% set p_max = states('input_number.pv2_record_w') | float(0) %}
+          {% set pct = min(100.0, ((p_max / 7575) * 100)) | round(1) %}
+          {% set kw = (p_max / 1000) | round(2) %}
+          {{ pct }}% ({{ kw }} kW)
+
+      - name: "Solar Total Pico Max Directo Display"
+        unique_id: solar_total_pico_max_directo_display
+        icon: mdi:trending-up
+        state: >
+          {% set p_max = states('input_number.total_record_w') | float(0) %}
+          {% set pct = min(100.0, ((p_max / 12120) * 100)) | round(1) %}
+          {% set kw = (p_max / 1000) | round(2) %}
+          {{ pct }}% ({{ kw }} kW)
+
+      - name: "Consumo Vivienda Pico Max Directo Display"
+        unique_id: consumo_vivienda_pico_max_directo_display
+        icon: mdi:trending-up
+        state: >
+          {% set p_max = states('input_number.consumo_record_w') | float(0) %}
+          {% set pct = min(100.0, ((p_max / 10000) * 100)) | round(1) %}
+          {% set kw = (p_max / 1000) | round(2) %}
+          {{ pct }}% ({{ kw }} kW)
+
+      # --- MÉTRICA 1: PEAK HOY ---
+      - name: "Solar PV1 Pico Record Display"
+        unique_id: solar_pv1_pico_record_display
+        icon: mdi:trophy-outline
+        state: >
+          {% set p_max = states('input_number.pv1_record_w') | float(0) %}
+          {% if p_max > 50 %}
+            {% set pct = min(100.0, ((p_max / 4545) * 100)) | round(1) %}
+            {% set kw = (p_max / 1000) | round(2) %}
+            {% set t_ini = states('input_datetime.pv1_racha_inicio') %}
+            {% set t_fin = states('input_datetime.pv1_racha_fin') %}
+            {% set s_ini = state_attr('input_datetime.pv1_racha_inicio', 'timestamp') | int(0) %}
+            {% set s_fin = state_attr('input_datetime.pv1_racha_fin', 'timestamp') | int(0) %}
+            {% set dur_s = max(0, (s_fin - s_ini)) %}
+            {% set m = dur_s // 60 %}
+            {% set s = dur_s % 60 %}
+            {% if dur_s >= 60 %}
+              {{ pct }}% ({{ kw }} kW · {{ t_ini }} - {{ t_fin }} · {{ m }}m {{ s }}s)
+            {% else %}
+              {{ pct }}% ({{ kw }} kW · {{ t_ini }} - {{ t_fin }} · {{ s }}s)
+            {% endif %}
+          {% else %}
+            0.0% (0.00 kW · --:--:--)
+          {% endif %}
+
+      - name: "Solar PV2 Pico Record Display"
+        unique_id: solar_pv2_pico_record_display
+        icon: mdi:trophy-outline
+        state: >
+          {% set p_max = states('input_number.pv2_record_w') | float(0) %}
+          {% if p_max > 50 %}
+            {% set pct = min(100.0, ((p_max / 7575) * 100)) | round(1) %}
+            {% set kw = (p_max / 1000) | round(2) %}
+            {% set t_ini = states('input_datetime.pv2_racha_inicio') %}
+            {% set t_fin = states('input_datetime.pv2_racha_fin') %}
+            {% set s_ini = state_attr('input_datetime.pv2_racha_inicio', 'timestamp') | int(0) %}
+            {% set s_fin = state_attr('input_datetime.pv2_racha_fin', 'timestamp') | int(0) %}
+            {% set dur_s = max(0, (s_fin - s_ini)) %}
+            {% set m = dur_s // 60 %}
+            {% set s = dur_s % 60 %}
+            {% if dur_s >= 60 %}
+              {{ pct }}% ({{ kw }} kW · {{ t_ini }} - {{ t_fin }} · {{ m }}m {{ s }}s)
+            {% else %}
+              {{ pct }}% ({{ kw }} kW · {{ t_ini }} - {{ t_fin }} · {{ s }}s)
+            {% endif %}
+          {% else %}
+            0.0% (0.00 kW · --:--:--)
+          {% endif %}
+
+      - name: "Solar Total Pico Record Display"
+        unique_id: solar_total_pico_record_display
+        icon: mdi:trophy-outline
+        state: >
+          {% set p_max = states('input_number.total_record_w') | float(0) %}
+          {% if p_max > 50 %}
+            {% set pct = min(100.0, ((p_max / 12120) * 100)) | round(1) %}
+            {% set kw = (p_max / 1000) | round(2) %}
+            {% set t_ini = states('input_datetime.total_racha_inicio') %}
+            {% set t_fin = states('input_datetime.total_racha_fin') %}
+            {% set s_ini = state_attr('input_datetime.total_racha_inicio', 'timestamp') | int(0) %}
+            {% set s_fin = state_attr('input_datetime.total_racha_fin', 'timestamp') | int(0) %}
+            {% set dur_s = max(0, (s_fin - s_ini)) %}
+            {% set m = dur_s // 60 %}
+            {% set s = dur_s % 60 %}
+            {% if dur_s >= 60 %}
+              {{ pct }}% ({{ kw }} kW · {{ t_ini }} - {{ t_fin }} · {{ m }}m {{ s }}s)
+            {% else %}
+              {{ pct }}% ({{ kw }} kW · {{ t_ini }} - {{ t_fin }} · {{ s }}s)
+            {% endif %}
+          {% else %}
+            0.0% (0.00 kW · --:--:--)
+          {% endif %}
+
+      - name: "Consumo Vivienda Pico Record Display"
+        unique_id: consumo_vivienda_pico_record_display
+        icon: mdi:trophy-outline
+        state: >
+          {% set p_max = states('input_number.consumo_record_w') | float(0) %}
+          {% if p_max > 50 %}
+            {% set pct = min(100.0, ((p_max / 10000) * 100)) | round(1) %}
+            {% set kw = (p_max / 1000) | round(2) %}
+            {% set t_ini = states('input_datetime.consumo_racha_inicio') %}
+            {% set t_fin = states('input_datetime.consumo_racha_fin') %}
+            {% set s_ini = state_attr('input_datetime.consumo_racha_inicio', 'timestamp') | int(0) %}
+            {% set s_fin = state_attr('input_datetime.consumo_racha_fin', 'timestamp') | int(0) %}
+            {% set dur_s = max(0, (s_fin - s_ini)) %}
+            {% set m = dur_s // 60 %}
+            {% set s = dur_s % 60 %}
+            {% if dur_s >= 60 %}
+              {{ pct }}% ({{ kw }} kW · {{ t_ini }} - {{ t_fin }} · {{ m }}m {{ s }}s)
+            {% else %}
+              {{ pct }}% ({{ kw }} kW · {{ t_ini }} - {{ t_fin }} · {{ s }}s)
+            {% endif %}
+          {% else %}
+            0.0% (0.00 kW · --:--:--)
+          {% endif %}
+
+      # --- MÉTRICA 2: ZONA RÉCORD ACUMULADA ---
+      - name: "Solar PV1 Zona Record Acumulado Display"
+        unique_id: solar_pv1_zona_record_acumulado_display
+        icon: mdi:chart-bell-curve-cumulative
+        state: >
+          {% set p_max = states('input_number.pv1_record_w') | float(0) %}
+          {% set pct = min(100.0, ((p_max / 4545) * 100)) | round(1) %}
+          {% set kw = (p_max / 1000) | round(2) %}
+          {% set t_horas = states('sensor.solar_pv1_tiempo_acumulado_record_hoy') | float(0) %}
+          {% set mins = (t_horas * 60) | round(0) | int %}
+          {% if mins > 60 %}
+            {% set h = mins // 60 %}
+            {% set m = mins % 60 %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: {{ h }}h {{ m }}m)
+          {% elif mins > 0 %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: {{ mins }}m)
+          {% else %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: <1m)
+          {% endif %}
+
+      - name: "Solar PV2 Zona Record Acumulado Display"
+        unique_id: solar_pv2_zona_record_acumulado_display
+        icon: mdi:chart-bell-curve-cumulative
+        state: >
+          {% set p_max = states('input_number.pv2_record_w') | float(0) %}
+          {% set pct = min(100.0, ((p_max / 7575) * 100)) | round(1) %}
+          {% set kw = (p_max / 1000) | round(2) %}
+          {% set t_horas = states('sensor.solar_pv2_tiempo_acumulado_record_hoy') | float(0) %}
+          {% set mins = (t_horas * 60) | round(0) | int %}
+          {% if mins > 60 %}
+            {% set h = mins // 60 %}
+            {% set m = mins % 60 %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: {{ h }}h {{ m }}m)
+          {% elif mins > 0 %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: {{ mins }}m)
+          {% else %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: <1m)
+          {% endif %}
+
+      - name: "Solar Total Zona Record Acumulado Display"
+        unique_id: solar_total_zona_record_acumulado_display
+        icon: mdi:chart-bell-curve-cumulative
+        state: >
+          {% set p_max = states('input_number.total_record_w') | float(0) %}
+          {% set pct = min(100.0, ((p_max / 12120) * 100)) | round(1) %}
+          {% set kw = (p_max / 1000) | round(2) %}
+          {% set t_horas = states('sensor.solar_total_tiempo_acumulado_record_hoy') | float(0) %}
+          {% set mins = (t_horas * 60) | round(0) | int %}
+          {% if mins > 60 %}
+            {% set h = mins // 60 %}
+            {% set m = mins % 60 %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: {{ h }}h {{ m }}m)
+          {% elif mins > 0 %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: {{ mins }}m)
+          {% else %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: <1m)
+          {% endif %}
+
+      - name: "Consumo Vivienda Zona Record Acumulado Display"
+        unique_id: consumo_vivienda_zona_record_acumulado_display
+        icon: mdi:chart-bell-curve-cumulative
+        state: >
+          {% set p_max = states('input_number.consumo_record_w') | float(0) %}
+          {% set pct = min(100.0, ((p_max / 10000) * 100)) | round(1) %}
+          {% set kw = (p_max / 1000) | round(2) %}
+          {% set t_horas = states('sensor.consumo_vivienda_tiempo_acumulado_record_hoy') | float(0) %}
+          {% set mins = (t_horas * 60) | round(0) | int %}
+          {% if mins > 60 %}
+            {% set h = mins // 60 %}
+            {% set m = mins % 60 %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: {{ h }}h {{ m }}m)
+          {% elif mins > 0 %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: {{ mins }}m)
+          {% else %}
+            {{ pct }}% ({{ kw }} kW ±100W · Total Hoy: <1m)
+          {% endif %}
+
+      # --- MÉTRICA 3: RÉCORD HISTÓRICO ANUAL ---
+      - name: "Solar PV1 Record Historico Display"
+        unique_id: solar_pv1_record_historico_display
+        icon: mdi:medal
+        state: >
+          {% set p_max = states('input_number.pv1_record_historico_w') | float(0) %}
+          {% if p_max > 50 %}
+            {% set pct = min(100.0, ((p_max / 4545) * 100)) | round(1) %}
+            {% set kw = (p_max / 1000) | round(2) %}
+            {% set ts = states('input_datetime.pv1_record_historico_ts') %}
+            {{ pct }}% ({{ kw }} kW · {{ ts }})
+          {% else %}
+            0.0% (0.00 kW · ----/--/--)
+          {% endif %}
+
+      - name: "Solar PV2 Record Historico Display"
+        unique_id: solar_pv2_record_historico_display
+        icon: mdi:medal
+        state: >
+          {% set p_max = states('input_number.pv2_record_historico_w') | float(0) %}
+          {% if p_max > 50 %}
+            {% set pct = min(100.0, ((p_max / 7575) * 100)) | round(1) %}
+            {% set kw = (p_max / 1000) | round(2) %}
+            {% set ts = states('input_datetime.pv2_record_historico_ts') %}
+            {{ pct }}% ({{ kw }} kW · {{ ts }})
+          {% else %}
+            0.0% (0.00 kW · ----/--/--)
+          {% endif %}
+
+      - name: "Solar Total Record Historico Display"
+        unique_id: solar_total_record_historico_display
+        icon: mdi:medal
+        state: >
+          {% set p_max = states('input_number.total_record_historico_w') | float(0) %}
+          {% if p_max > 50 %}
+            {% set pct = min(100.0, ((p_max / 12120) * 100)) | round(1) %}
+            {% set kw = (p_max / 1000) | round(2) %}
+            {% set ts = states('input_datetime.total_record_historico_ts') %}
+            {{ pct }}% ({{ kw }} kW · {{ ts }})
+          {% else %}
+            0.0% (0.00 kW · ----/--/--)
+          {% endif %}
+
+      - name: "Consumo Vivienda Record Historico Display"
+        unique_id: consumo_vivienda_record_historico_display
+        icon: mdi:medal
+        state: >
+          {% set p_max = states('input_number.consumo_record_historico_w') | float(0) %}
+          {% if p_max > 50 %}
+            {% set pct = min(100.0, ((p_max / 10000) * 100)) | round(1) %}
+            {% set kw = (p_max / 1000) | round(2) %}
+            {% set ts = states('input_datetime.consumo_record_historico_ts') %}
+            {{ pct }}% ({{ kw }} kW · {{ ts }})
+          {% else %}
+            0.0% (0.00 kW · ----/--/--)
+          {% endif %}
+
+      # --- PREVISIÓN SOLAR (FORECAST.SOLAR) ---
+      - name: "Solar Prevision Energia Total Hoy kWh"
+        unique_id: "solar_prevision_energia_total_hoy_kwh"
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total
+        icon: "mdi:solar-power"
+        state: >
+          {% set e_sur = states('sensor.energy_production_today') | float(0) %}
+          {% set e_oeste = states('sensor.energy_production_today_2') | float(0) %}
+          {% set e_este = states('sensor.energy_production_today_3') | float(0) %}
+          {{ (e_sur + e_oeste + e_este) | round(2) }}
+
+      # --- SENSOR ACUMULATIVO VITALICIO (TOTAL INCREASING) ---
+      - name: "Solar Prevision Vitalicia Total Acumulada"
+        unique_id: solar_prevision_vitalicia_total_acumulada_kwh
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        icon: mdi:chart-timeline-variant-shimmer
+        state: >
+          {{ states('input_number.solar_prevision_contador_vitalicio_kwh') | float(0) | round(2) }}
+
+      # --- DISPLAY ACUMULADO DIARIO VS PREVISIÓN ---
+      - name: "Solar Generacion vs Prevision Hoy Display"
+        unique_id: solar_generacion_vs_prevision_hoy_display
+        icon: mdi:solar-power
+        state: >
+          {% set gen = states('sensor.solar_energia_fv_diaria') | float(0) | round(2) %}
+          {% set prev = states('sensor.solar_prevision_energia_total_hoy_kwh') | float(0) | round(2) %}
+          {% if prev > 0 %}
+            {% set pct = ((gen / prev) * 100) | round(1) %}
+            {{ gen }} / {{ prev }} kWh ({{ pct }}%)
+          {% else %}
+            {{ gen }} kWh
+          {% endif %}
+
+      # --- DISPLAY ACUMULADO MENSUAL VS PREVISIÓN ACUMULADA ---
+      - name: "Solar Generacion vs Prevision Mes Display"
+        unique_id: solar_generacion_vs_prevision_mes_display
+        icon: mdi:calendar-month
+        state: >
+          {% set gen_mes = states('sensor.solar_energia_fv_mensual') | float(0) | round(2) %}
+          {% set prev_cerrada_mes = states('sensor.solar_prevision_mensual_acumulada') | float(0) %}
+          {% set prev_hoy = states('sensor.solar_prevision_energia_total_hoy_kwh') | float(0) %}
+          {% set prev_mes_total = (prev_cerrada_mes + prev_hoy) | round(2) %}
+
+          {% if prev_mes_total > 0 %}
+            {% set pct = ((gen_mes / prev_mes_total) * 100) | round(1) %}
+            {{ gen_mes }} / {{ prev_mes_total }} kWh ({{ pct }}%)
+          {% else %}
+            {{ gen_mes }} kWh
+          {% endif %}
+
+      # --- CONSUMO VIVIENDA ---
+      - name: "Consumo Vivienda W"
+        unique_id: "consumo_vivienda_w"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:home-lightning-bolt"
+        state: >
+          {{ states('sensor.inversor_potencia_activa_salida') | float(0) | round(1) }}
+
+      - name: "Consumo Vivienda kW"
+        unique_id: "consumo_vivienda_kw"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:home-lightning-bolt-outline"
+        state: >
+          {{ (states('sensor.inversor_potencia_activa_salida') | float(0) / 1000) | round(3) }}
+
+      # --- BATERÍAS (LEY DE OHM) ---
+      - name: "Batería Potencia Neta"
+        unique_id: "bateria_potencia_neta_w"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:battery-sync"
+        state: >
+          {% set v = states('sensor.bateria_voltaje') | float(0) %}
+          {% set i_charge = states('sensor.bateria_corriente_carga') | float(0) %}
+          {% set i_discharge = states('sensor.bateria_corriente_descarga') | float(0) %}
+          {% if i_charge > 0 %}
+            {{ (v * i_charge) | round(1) }}
+          {% elif i_discharge > 0 %}
+            {{ (v * i_discharge * -1) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Batería Potencia Carga"
+        unique_id: "bateria_potencia_carga_w"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:battery-charging-high"
+        state: >
+          {% set v = states('sensor.bateria_voltaje') | float(0) %}
+          {% set i = states('sensor.bateria_corriente_carga') | float(0) %}
+          {{ (v * i) | round(1) }}
+
+      - name: "Batería Potencia Carga kW"
+        unique_id: "bateria_potencia_carga_kw"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {{ (states('sensor.bateria_potencia_carga') | float(0) / 1000) | round(3) }}
+
+      - name: "Batería Potencia Descarga"
+        unique_id: "bateria_potencia_descarga_w"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:battery-arrow-down"
+        state: >
+          {% set v = states('sensor.bateria_voltaje') | float(0) %}
+          {% set i = states('sensor.bateria_corriente_descarga') | float(0) %}
+          {{ (v * i) | round(1) }}
+
+      - name: "Batería Potencia Descarga kW"
+        unique_id: "bateria_potencia_descarga_kw"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {{ (states('sensor.bateria_potencia_descarga') | float(0) / 1000) | round(3) }}
+
+      # --- MÉTRICAS ELÉCTRICAS Y AUTOSUFICIENCIA ---
+      - name: "Inversor Factor de Potencia"
+        unique_id: "inversor_factor_de_potencia"
+        state_class: measurement
+        icon: "mdi:sine-wave"
+        state: >
+          {% set w = states('sensor.inversor_potencia_activa_salida') | float(0) %}
+          {% set va = states('sensor.inversor_potencia_aparente_salida') | float(0) %}
+          {% if va > 0 %}
+            {{ min((w / va) | round(2), 1.0) }}
+          {% else %}
+            1.0
+          {% endif %}
+
+      - name: "Autosuficiencia Solar Instantanea"
+        unique_id: "autosuficiencia_solar_instantanea_pct"
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: "mdi:percent"
+        state: >
+          100.0
+
+      - name: "Cobertura Solar Directa"
+        unique_id: "cobertura_solar_directa_pct"
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: "mdi:solar-power"
+        state: >
+          {% set solar = states('sensor.solar_potencia_total_fv') | float(0) %}
+          {% set consumo = states('sensor.consumo_vivienda_w') | float(0) %}
+          {% if consumo > 0 %}
+            {{ min(((solar / consumo) * 100) | round(1), 100.0) }}
+          {% else %}
+            100.0
+          {% endif %}
+
+      - name: "Solar Excedente Potencia"
+        unique_id: "solar_excedente_potencia_w"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        icon: "mdi:transmission-tower-export"
+        state: >
+          {% set solar = states('sensor.solar_potencia_total_fv') | float(0) %}
+          {% set consumo = states('sensor.consumo_vivienda_w') | float(0) %}
+          {% set carga_bat = states('sensor.bateria_potencia_carga') | float(0) %}
+          {{ max(0, (solar - consumo - carga_bat)) | round(1) }}
+
+      # --- CÁLCULOS ECONÓMICOS (€) Y GASTO DE GRID / GASOLINA ---
+      - name: "Grid Gasto Coste Hoy EUR"
+        unique_id: "grid_gasto_coste_hoy_eur"
+        unit_of_measurement: "€"
+        state_class: total
+        icon: "mdi:cash-minus"
+        state: >
+          {% set kwh_grid = states('sensor.grid_energia_diaria') | float(0) %}
+          {% set precio_kwh = states('sensor.grid_coste_kwh_actual') | float(1.18) %}
+          {{ (kwh_grid * precio_kwh) | round(2) }}
+
+      - name: "Grid Gasto Coste Mes EUR"
+        unique_id: "grid_gasto_coste_mes_eur"
+        unit_of_measurement: "€"
+        state_class: total
+        icon: "mdi:cash-minus"
+        state: >
+          {% set kwh_grid_mes = states('sensor.grid_energia_mensual') | float(0) %}
+          {% set precio_kwh = states('sensor.grid_coste_kwh_actual') | float(1.18) %}
+          {{ (kwh_grid_mes * precio_kwh) | round(2) }}
+
+      - name: "Grid Litros Gasolina Mes"
+        unique_id: "grid_litros_gasolina_mes"
+        unit_of_measurement: "L"
+        state_class: total
+        icon: "mdi:gas-station"
+        state: >
+          {% set kwh_grid_mes = states('sensor.grid_energia_mensual') | float(0) %}
+          {{ (kwh_grid_mes * (3.5 / 4.5)) | round(1) }}
+
+      - name: "Solar Ahorro Estimado Hoy"
+        unique_id: "solar_ahorro_hoy_eur"
+        unit_of_measurement: "€"
+        state_class: total
+        icon: "mdi:currency-eur"
+        state: >
+          {{ (states('sensor.consumo_energia_diario') | float(0) * 0.16) | round(2) }}
+
+      - name: "Solar Ahorro Estimado Mes"
+        unique_id: "solar_ahorro_mes_eur"
+        unit_of_measurement: "€"
+        state_class: total
+        icon: "mdi:currency-eur"
+        state: >
+          {{ (states('sensor.consumo_energia_mensual') | float(0) * 0.16) | round(2) }}
+
+      - name: "Consumo Coste Teórico Hoy"
+        unique_id: "consumo_coste_hoy_eur"
+        unit_of_measurement: "€"
+        state_class: total
+        icon: "mdi:cash-minus"
+        state: >
+          {% set kwh_solar = states('sensor.consumo_energia_diario') | float(0) %}
+          {% set coste_grid_hoy = states('sensor.grid_gasto_coste_hoy_eur') | float(0) %}
+          {{ ((kwh_solar * 0.16) + coste_grid_hoy) | round(2) }}
+
+      - name: "Consumo Coste Teórico Mes"
+        unique_id: "consumo_coste_mes_eur"
+        unit_of_measurement: "€"
+        state_class: total
+        icon: "mdi:cash-minus"
+        state: >
+          {% set kwh_solar_mes = states('sensor.consumo_energia_mensual') | float(0) %}
+          {% set coste_grid_mes = states('sensor.grid_gasto_coste_mes_eur') | float(0) %}
+          {{ ((kwh_solar_mes * 0.16) + coste_grid_mes) | round(2) }}
+
+# =============================================================
+# 4. CONTADORES PERIÓDICOS (UTILITY METER): DÍA, MES Y AÑO
+# =============================================================
+utility_meter:
+  solar_energia_fv_diaria:
+    source: sensor.solar_energia_fv_acumulada_total
+    name: "Solar Energía FV Diaria"
+    cycle: daily
+
+  solar_energia_fv_mensual:
+    source: sensor.solar_energia_fv_acumulada_total
+    name: "Solar Energía FV Mensual"
+    cycle: monthly
+
+  solar_energia_fv_anual:
+    source: sensor.solar_energia_fv_acumulada_total
+    name: "Solar Energía FV Anual"
+    cycle: yearly
+
+  # --- Previsión Mensual Acumulada Nativa ---
+  solar_prevision_mensual_acumulada:
+    source: sensor.solar_prevision_vitalicia_total_acumulada
+    name: "Solar Previsión Mensual Acumulada"
+    cycle: monthly
+
+  solar_mppt1_energia_diaria:
+    source: sensor.solar_mppt1_energia_acumulada
+    name: "Solar MPPT1 Energía Diaria"
+    cycle: daily
+
+  solar_mppt1_energia_mensual:
+    source: sensor.solar_mppt1_energia_acumulada
+    name: "Solar MPPT1 Energía Mensual"
+    cycle: monthly
+
+  solar_mppt2_energia_diaria:
+    source: sensor.solar_mppt2_energia_acumulada
+    name: "Solar MPPT2 Energía Diaria"
+    cycle: daily
+
+  solar_mppt2_energia_mensual:
+    source: sensor.solar_mppt2_energia_acumulada
+    name: "Solar MPPT2 Energía Mensual"
+    cycle: monthly
+
+  grid_energia_diaria:
+    source: sensor.grid_energia_acumulada_total
+    name: "Grid Energía Diaria"
+    cycle: daily
+
+  grid_energia_mensual:
+    source: sensor.grid_energia_acumulada_total
+    name: "Grid Energía Mensual"
+    cycle: monthly
+
+  grid_energia_anual:
+    source: sensor.grid_energia_acumulada_total
+    name: "Grid Energía Anual"
+    cycle: yearly
+
+  consumo_energia_diario:
+    source: sensor.consumo_energia_acumulada_total
+    name: "Consumo Energía Diario"
+    cycle: daily
+
+  consumo_energia_mensual:
+    source: sensor.consumo_energia_acumulada_total
+    name: "Consumo Energía Mensual"
+    cycle: monthly
+
+  consumo_energia_anual:
+    source: sensor.consumo_energia_acumulada_total
+    name: "Consumo Energía Anual"
+    cycle: yearly
+
+  bateria_energia_carga_diaria:
+    source: sensor.bateria_energia_carga_acumulada
+    name: "Batería Carga Diaria"
+    cycle: daily
+
+  bateria_energia_descarga_diaria:
+    source: sensor.bateria_energia_descarga_acumulada
+    name: "Batería Descarga Diaria"
+    cycle: daily
